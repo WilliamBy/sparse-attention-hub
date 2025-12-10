@@ -14,7 +14,7 @@ import sys
 import os
 import torch
 from pathlib import Path
-from transformers import BitsAndBytesConfig # Added for better VRAM management
+#from transformers import BitsAndBytesConfig # Added for better VRAM management
 
 # ==============================================================================
 # USER CONFIGURATION SECTION
@@ -63,6 +63,13 @@ sparse_attention_config = ResearchAttentionConfig(
 
 # ==============================================================================
 # END USER CONFIGURATION SECTION
+##If you run into memory issues, consider using the following (and import it):
+#quant_config = BitsAndBytesConfig(
+#            load_in_4bit=True,
+#            bnb_4bit_use_double_quant=True,
+#            bnb_4bit_quant_type="nf4",
+#            bnb_4bit_compute_dtype=dtype
+#        )
 # ==============================================================================
 
 
@@ -114,14 +121,8 @@ def main():
         dtype = torch.bfloat16
         #usse Flash Attention if supported, which is crucial for speed. rmr to add this to requirements
         attn_impl = "flash_attention_2"
-        # 4-bit quantization config (crucial for VRAM management)
-        quant_config = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_use_double_quant=True,
-            bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=dtype
-        )
-        print(f"Using GPU ({device}) with bfloat16 and 4-bit quantization.")
+        quant_config = None
+        print(f"Using GPU ({device}) with bfloat16 (Full Precision, NO Quantization).")
     else:
         device = "cpu"
         dtype = torch.float32
