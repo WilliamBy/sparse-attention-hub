@@ -2,39 +2,76 @@
 """
 Interactive Chat Script for Sparse Attention Models
 
+This script loads a model and a sparse attention configuration defined below,
+then starts an interactive chat session.
+
 Usage:
-    python3 scripts/chat.py --sparse_attention_config config.yaml --model meta-llama/Llama-3.1-8B-Instruct
+    python3 scripts/chat.py --model meta-llama/Llama-3.1-8B-Instruct
 """
 
 import argparse
 import sys
 import os
 import torch
-import yaml
 from pathlib import Path
 from transformers import BitsAndBytesConfig # Added for better VRAM management
 
-# --- Dynamic Path Insertion ---
-current_file = Path(__file__).resolve()
-#Assumes the script is in /root/scripts/chat.py and the root is /root/
-project_root = current_file.parent.parent
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
+# ==============================================================================
+# USER CONFIGURATION SECTION
+# 
+# Define the specific Sparse Attention setup you want to use here.
+# This structure is what is used by the sparse_attention_hub.
+# ==============================================================================
 
-#here we want to import our structure, ie which config we are using
+#You must ensure all masker config classes used here are imported below.
 try:
+    #assume these are available in the environment path
     from sparse_attention_hub.sparse_attention.research_attention import ResearchAttentionConfig
     from sparse_attention_hub.sparse_attention.research_attention.maskers.fixed.implementations import (
-        PQCacheConfig
+        PQCacheConfig,
+        SinkMaskerConfig, 
+        LocalMaskerConfig, 
     )
     from sparse_attention_hub.adapters import ModelAdapterHF
 except ImportError as e:
     print("="*60, file=sys.stderr)
-    print(f"FATAL IMPORT ERROR: Could not find required modules.", file=sys.stderr)
+    print(f"FATAL IMPORT ERROR: Could not find required sparse attention modules.", file=sys.stderr)
     print(f"Please check your Python path and project structure.", file=sys.stderr)
     print(f"Details: {e}", file=sys.stderr)
     print("="*60, file=sys.stderr)
     sys.exit(1)
+
+
+sparse_attention_config = ResearchAttentionConfig(
+    masker_configs=[
+        SinkMaskerConfig(
+            sink_size=128,
+        ),
+        LocalMaskerConfig(
+            window_size=128,
+        ),
+        PQCacheConfig(
+            heavy_size=0.1,
+            pq_group_factor=2,
+            pq_bits=6,
+            kmeans_iter=10,
+            init_offset=128,
+            metric="euclidean",
+        ),
+    ]
+)
+
+# ==============================================================================
+# END USER CONFIGURATION SECTION
+# ==============================================================================
+
+
+# --- Dynamic Path Insertion ---
+current_file = Path(__file__).resolve()
+#assume the script is in /root/scripts/chat.py and the root is /root/
+project_root = current_file.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
 
 
 def get_multiline_input(label):
@@ -57,48 +94,23 @@ def get_multiline_input(label):
             return None
     return "\n".join(lines)
 
-def load_config(config_path):
-    """
-    Loads the sparse attention configuration from a YAML file.
-    """
-    # Use Path to handle relative/absolute paths robustly
-    resolved_path = Path(config_path).resolve() 
-    if not resolved_path.exists():
-        raise FileNotFoundError(f"Configuration file not found at: {resolved_path}")
-        
-    with open(resolved_path, 'r') as f:
-        raw_config = yaml.safe_load(f)
-    
-    masker_configs = []
-    # Assumes the PQCacheConfig kwargs are provided under 'masker_configs'
-    raw_maskers = raw_config.get('masker_configs', []) if isinstance(raw_config, dict) else raw_config
-    
-    for m_cfg in raw_maskers:
-        if not isinstance(m_cfg, dict):
-            raise ValueError("Each masker entry must be a mapping of PQCache args.")
-        # Attempt to build PQCache config
-        masker_configs.append(PQCacheConfig(**m_cfg))
-            
-    return ResearchAttentionConfig(masker_configs=masker_configs)
 
 def main():
     parser = argparse.ArgumentParser(description="Chat with Sparse Attention Model")
-    parser.add_argument("--sparse_attention_config", required=True, help="Path to YAML config file")
     parser.add_argument("--model", required=True, help="Model identifier (e.g. meta-llama/Llama-3.1-8B-Instruct)")
     args = parser.parse_args()
 
-    # 1. Load Configuration
-    print(f"Loading config from {args.sparse_attention_config}...")
-    try:
-        sparse_attention_config = load_config(args.sparse_attention_config)
-    except Exception as e:
-        print(f"\n[FATAL CONFIG ERROR] Failed to load configuration: {e}", file=sys.stderr)
-        sys.exit(1)
+    print(f"Using sparse attention configuration: {sparse_attention_config.__class__.__name__}")
+    if hasattr(sparse_attention_config, 'masker_configs'):
+        print("Maskers used:")
+        for cfg in sparse_attention_config.masker_configs:
+            print(f"- {cfg.__class__.__name__}")
 
-    # 2. Device and Attention Implementation Setup
+
+    # device and Attention Implementation Setup
     if torch.cuda.is_available():
         device = "cuda"
-        # Use bfloat16 for better numerical stability and speed on modern GPUs
+        #use bfloat16 for better numerical stability and speed on modern GPUs
         dtype = torch.bfloat16
         #usse Flash Attention if supported, which is crucial for speed. rmr to add this to requirements
         attn_impl = "flash_attention_2"
@@ -118,7 +130,7 @@ def main():
         print(f"WARNING: Running on CPU ({device}). Performance will be very slow.")
 
 
-    # 3. Initialize Adapter and Load Model (Crucial Error Handling Block)
+    #initialize Adapter and Load Model (Crucial Error Handling Block)
     print(f"Loading model {args.model}...")
     try:
         #ModelAdapterHF is assumed to handle the patching of attention layers internally
@@ -130,7 +142,7 @@ def main():
                 "attn_implementation": attn_impl,
                 "device_map": "auto", # Auto device mapping for efficient VRAM usage
                 "quantization_config": quant_config, # Pass 4-bit config if available
-                # If running Llama 3/4 from HF, authentication is required
+                #if running Llama 3/4 from HF, authentication is required
                 "token": os.environ.get("HUGGINGFACE_TOKEN") # Pass token if set in environment
             },
             device=device
