@@ -15,15 +15,13 @@ from pathlib import Path
 from transformers import BitsAndBytesConfig # Added for better VRAM management
 
 # --- Dynamic Path Insertion ---
-# Ensure we're in the correct directory and add to Python path
-# This dynamically finds the repo root relative to this script
 current_file = Path(__file__).resolve()
-# Assumes the script is in /root/scripts/chat.py and the root is /root/
+#Assumes the script is in /root/scripts/chat.py and the root is /root/
 project_root = current_file.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-# Check for required imports from your project structure
+#here we want to import our structure, ie which config we are using
 try:
     from sparse_attention_hub.sparse_attention.research_attention import ResearchAttentionConfig
     from sparse_attention_hub.sparse_attention.research_attention.maskers.fixed.implementations import (
@@ -102,7 +100,7 @@ def main():
         device = "cuda"
         # Use bfloat16 for better numerical stability and speed on modern GPUs
         dtype = torch.bfloat16
-        # Use Flash Attention if supported, which is crucial for speed
+        #usse Flash Attention if supported, which is crucial for speed. rmr to add this to requirements
         attn_impl = "flash_attention_2"
         # 4-bit quantization config (crucial for VRAM management)
         quant_config = BitsAndBytesConfig(
@@ -123,7 +121,7 @@ def main():
     # 3. Initialize Adapter and Load Model (Crucial Error Handling Block)
     print(f"Loading model {args.model}...")
     try:
-        # NOTE: ModelAdapterHF is assumed to handle the patching of attention layers internally
+        #ModelAdapterHF is assumed to handle the patching of attention layers internally
         adapter = ModelAdapterHF(
             model_name=args.model,
             sparse_attention_config=sparse_attention_config,
@@ -140,7 +138,7 @@ def main():
         print("Model Adapter initialized successfully.")
     
     except Exception as e:
-        # This block catches errors during model loading, patching, or OOM
+        #catches errors during model loading, patching, or OOM
         print("\n" + "="*70, file=sys.stderr)
         print(f"FATAL MODEL/ADAPTER INITIALIZATION ERROR:", file=sys.stderr)
         print(f"Type: {type(e).__name__}", file=sys.stderr)
@@ -189,8 +187,6 @@ def main():
                     do_sample=True,
                     temperature=0.6,
                     top_p=0.9,
-                    # Crucial: The custom attention_mask is handled internally by adapter.model 
-                    # based on the sparse_attention_config passed during init.
                 )
 
             # 6. Decode and Print Response
