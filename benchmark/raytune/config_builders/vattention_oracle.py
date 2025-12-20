@@ -25,8 +25,8 @@ def _validity_check(config: ResearchAttentionConfig, sparsity_val: float) -> boo
     return (config.masker_configs[2].heavy_size + config.masker_configs[3].base_rate_sampling) <= sparsity_val
 
 
-@register_builder("vattention_oracle")
-class VAttentionOracleConfigBuilder(BaseConfigBuilder):
+@register_builder("vattention_oracle_topk")
+class VAttentionOracleTopKConfigBuilder(BaseConfigBuilder):
     """Builder for VAttention Oracle TopK sparse attention configurations."""
     
     def build_configs(
@@ -54,7 +54,7 @@ class VAttentionOracleConfigBuilder(BaseConfigBuilder):
         for sparsity_objective in sparsity_objectives:
             sparsity_val: float = float(sparsity_objective) / 100.0
             classes = [SinkMaskerConfig, LocalMaskerConfig, OracleTopKConfig, AdaptiveSamplingMaskerConfig]
-            name: str = get_masker_list_name(classes, other_params={"builder": "vattention_oracle", "sparsity_obj": sparsity_objective})
+            name: str = get_masker_list_name(classes, other_params={"builder": "vattention_oracle_topk", "sparsity_obj": sparsity_objective})
             config = ResearchAttentionConfig(masker_configs=[
                 SinkMaskerConfig(sink_size=128),
                 LocalMaskerConfig(window_size=128),

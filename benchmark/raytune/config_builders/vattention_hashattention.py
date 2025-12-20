@@ -33,8 +33,8 @@ def _validity_check(config: ResearchAttentionConfig, sparsity_val: float) -> boo
     )
 
 
-@register_builder("vattention_hashattention")
-class VAttentionHashAttentionConfigBuilder(BaseConfigBuilder):
+@register_builder("vattention_hashattention_topk")
+class VAttentionHashAttentionTopKConfigBuilder(BaseConfigBuilder):
     """Builder for VAttention HashAttention TopK sparse attention configurations."""
     
     def build_configs(
@@ -69,7 +69,7 @@ class VAttentionHashAttentionConfigBuilder(BaseConfigBuilder):
         for sparsity_objective in sparsity_objectives:
             sparsity_val: float = float(sparsity_objective) / 100.0
             classes = [SinkMaskerConfig, LocalMaskerConfig, HashAttentionTopKMaskerConfig, AdaptiveSamplingMaskerConfig]
-            name: str = get_masker_list_name(classes, other_params={"builder": "vattention_hashattention", "sparsity_obj": sparsity_objective})
+            name: str = get_masker_list_name(classes, other_params={"builder": "vattention_hashattention_topk", "sparsity_obj": sparsity_objective})
             config = ResearchAttentionConfig(masker_configs=[
                 SinkMaskerConfig(sink_size=128),
                 LocalMaskerConfig(window_size=128),

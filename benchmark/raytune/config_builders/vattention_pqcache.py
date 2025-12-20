@@ -33,9 +33,9 @@ def _validity_check(config: ResearchAttentionConfig, sparsity_val: float) -> boo
     return (config.masker_configs[2].heavy_size + config.masker_configs[3].base_rate_sampling) <= sparsity_val
 
 
-@register_builder("vattention_pqcache")
-class VAttentionPQCacheConfigBuilder(BaseConfigBuilder):
-    """Builder for VAttention PQCache sparse attention configurations."""
+@register_builder("vattention_pqcache_topk")
+class VAttentionPQCacheTopKConfigBuilder(BaseConfigBuilder):
+    """Builder for VAttention PQCache TopK sparse attention configurations."""
     
     def build_configs(
         self,
@@ -63,7 +63,7 @@ class VAttentionPQCacheConfigBuilder(BaseConfigBuilder):
             sparsity_val: float = float(sparsity_objective) / 100.0
             heavy_size: float = float(sparsity_objective) / 100.0
             classes = [SinkMaskerConfig, LocalMaskerConfig, PQCacheConfig, AdaptiveSamplingMaskerConfig]
-            name: str = get_masker_list_name(classes, other_params={"builder": "vattention_pqcache", "sparsity_obj": sparsity_objective})
+            name: str = get_masker_list_name(classes, other_params={"builder": "vattention_pqcache_topk", "sparsity_obj": sparsity_objective})
             
             config = ResearchAttentionConfig(masker_configs=[
                 SinkMaskerConfig(sink_size=128),

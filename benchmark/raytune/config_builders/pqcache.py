@@ -16,9 +16,9 @@ from .factory import register_builder
 from .utility import get_masker_list_name
 
 
-@register_builder("pqcache")
-class PQCacheConfigBuilder(BaseConfigBuilder):
-    """Builder for PQCache sparse attention configurations."""
+@register_builder("pqcache_topk")
+class PQCacheTopKConfigBuilder(BaseConfigBuilder):
+    """Builder for PQCache TopK sparse attention configurations."""
     
     def build_configs(
         self,
@@ -45,7 +45,7 @@ class PQCacheConfigBuilder(BaseConfigBuilder):
         for sparsity_objective in sparsity_objectives:
             heavy_size: float = float(sparsity_objective) / 100.0
             classes = [SinkMaskerConfig, LocalMaskerConfig, PQCacheConfig]
-            name: str = get_masker_list_name(classes, other_params={"builder": "pqcache", "sparsity_obj": sparsity_objective})
+            name: str = get_masker_list_name(classes, other_params={"builder": "pqcache_topk", "sparsity_obj": sparsity_objective})
             
             config = ResearchAttentionConfig(masker_configs=[
                 SinkMaskerConfig(sink_size=128),

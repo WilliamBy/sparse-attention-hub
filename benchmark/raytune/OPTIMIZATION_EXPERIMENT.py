@@ -55,25 +55,25 @@ MODEL_CONFIGS: Dict[str, Dict[str, str]] = {
 
 MODELS : List[str] = [
     "llama3.1-8b", 
-    "llama3.2-1b",
-    "llama3.2-3b",
-    "qwen3-4b",
-    "qwen3-30b-moe",
+    # "llama3.2-1b",
+    # "llama3.2-3b",
+    # "qwen3-4b",
+    # "qwen3-30b-moe",
 ]
 
 TASKS: List[str] = [
     "ruler32k/vt",
-    "ruler32k/qa_1",
-    "ruler32k/qa_2",
-    "ruler32k/fwe",
-    "ruler32k/niah_multikey_2",
-    "ruler32k/niah_multikey_3",
+    # "ruler32k/qa_1",
+    # "ruler32k/qa_2",
+    # "ruler32k/fwe",
+    # "ruler32k/niah_multikey_2",
+    # "ruler32k/niah_multikey_3",
 ]
 
 SPARSITY_OBJECTIVES: List[str] = [
-    2,
-    5,
-    10,
+    # 2,
+    # 5,
+    # 10,
     20,
 ]
 
@@ -85,17 +85,17 @@ MEMORY_OBJECTIVES: List[Optional[str]] = [
 
 BUILDER_NAMES: List[str] = [
     # "dense",
-    # "double_sparsity", 
+    # "double_sparsity_topk", 
     # "hashattention_topk",
     # "magicpig",
     # "oracle_topk",
     # "oracle_topp", 
     # "quest_topk",
-    # "vattention_hashattention",
-    # "vattention_oracle",
-    # "pqcache",
-    "vattention_pqcache",
-]  # Specify which builders to use (e.g., ["magicpig"], ["dense"], ["double_sparsity"])
+    # "vattention_hashattention_topk",
+    "vattention_oracle_topk",
+    # "pqcache_topk",
+    "vattention_pqcache_topk",
+]  # Specify which builders to use (e.g., ["magicpig"], ["dense"], ["double_sparsity_topk"])
 
 
 # SEARCH PARAMS
@@ -106,7 +106,7 @@ SEARCH_MAX_REQUESTS: int = 3  # Max requests per search trial
 OPTIMAL_CONFIGS_DIR: str = "/data/apdesai/code/DO_NOT_DELETE/vattention_pqcache_optimization/"  # Directory for storing optimal configurations
 RAY_RESULTS_DIR: str = "/tmp/ray_results"  # Directory for Ray Tune results
 SEARCH_TIMEOUT: int = 900  # Timeout per search trial in seconds
-ACTORS_PER_GPU: int = 1  # Number of actors per GPU for resource allocation
+ACTORS_PER_GPU: int = 2  # Number of actors per GPU for resource allocation
 
 
 """ DRY RUN 

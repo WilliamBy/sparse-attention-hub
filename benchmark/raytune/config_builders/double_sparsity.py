@@ -24,9 +24,9 @@ def _validity_check(config: ResearchAttentionConfig, mem_obj: int) -> bool:
     return (128 // config.masker_configs[2].group_factor) * config.masker_configs[2].label_bits == mem_obj
 
 
-@register_builder("double_sparsity")
-class DoubleSparsityConfigBuilder(BaseConfigBuilder):
-    """Builder for DoubleSparsity sparse attention configurations."""
+@register_builder("double_sparsity_topk")
+class DoubleSparsityTopKConfigBuilder(BaseConfigBuilder):
+    """Builder for DoubleSparsity TopK sparse attention configurations."""
     
     def build_configs(
         self,
@@ -59,7 +59,7 @@ class DoubleSparsityConfigBuilder(BaseConfigBuilder):
                 aux_mem: int = memory_objective
      
                 classes = [SinkMaskerConfig, LocalMaskerConfig, DoubleSparsityTopKMaskerConfig]
-                name: str = get_masker_list_name(classes, other_params={"builder": "double_sparsity", "sparsity_obj": sparsity_objective, "memory_obj": memory_objective})
+                name: str = get_masker_list_name(classes, other_params={"builder": "double_sparsity_topk", "sparsity_obj": sparsity_objective, "memory_obj": memory_objective})
 
                 config = ResearchAttentionConfig(masker_configs=[
                     SinkMaskerConfig(sink_size=128),
