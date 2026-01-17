@@ -119,6 +119,7 @@ class ResearchAttention(SparseAttention):
                 metadata={"layer_idx": kwargs["layer_idx"]},
             )
 
+        s_aux = kwargs.pop("s_aux", None)
         # Call compute_masked_attention_output on the result of the last mask
         # Always request attention weights to match the expected return signature
         attention_output: torch.Tensor
@@ -129,6 +130,7 @@ class ResearchAttention(SparseAttention):
             keys=keys,
             values=values,
             attention_mask=attention_mask,
+            sinks=s_aux,
             scaling=scaling,
             dropout=dropout,
             sparse_attention_mask=sparse_attention_mask,
